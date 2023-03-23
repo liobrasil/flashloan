@@ -1,70 +1,61 @@
 {
 	"contracts": {
-		"NonFungibleToken": {
+		"BasicToken1": "./cadence/contracts/BasicToken1.cdc",
+		"BasicToken2": "./cadence/contracts/BasicToken2.cdc",
+		"ExampleNFT": {
+			"source": "",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7"
+			}
+		},
+		"FUSD": {
+			"source": "",
 			"aliases": {
 				"emulator": "f8d6e0586b0a20c7"
 			}
 		},
 		"FlowToken": {
+			"source": "./cadence/contracts/flow_core/FlowToken.cdc",
 			"aliases": {
 				"emulator": "0ae53cb6e3f42a79"
 			}
 		},
 		"FungibleToken": {
-			"source":"./cadence/contracts/flow_core/FungibleToken.cdc",
+			"source": "./cadence/contracts/flow_core/FungibleToken.cdc",
 			"aliases": {
 				"emulator": "ee82856bf20e2aa6"
 			}
 		},
-		"FUSD": {
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7"
-			}
-		},
 		"MetadataViews": {
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7"
-			}
-		},
-		"ExampleNFT": {
-			"aliases": {
-				"emulator": "f8d6e0586b0a20c7"
-			}
-		},
-		"NFTStorefrontV2": {
+			"source": "",
 			"aliases": {
 				"emulator": "f8d6e0586b0a20c7"
 			}
 		},
 		"NFTStorefront": {
+			"source": "",
 			"aliases": {
 				"emulator": "f8d6e0586b0a20c7"
 			}
 		},
-		"SwapConfig": {
-			"source":"./cadence/contracts/utils/SwapConfig.cdc"
+		"NFTStorefrontV2": {
+			"source": "",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7"
+			}
 		},
-		"SwapError": {
-			"source":"./cadence/contracts/utils/SwapError.cdc"
+		"NonFungibleToken": {
+			"source": "",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7"
+			}
 		},
-		"SwapFactory": {
-			"source":"./cadence/contracts/SwapFactory.cdc"
-		},
-		"SwapInterfaces": {
-			"source":"./cadence/contracts/utils/SwapInterfaces.cdc"
-		},
-		"SwapPair": {
-			"source":"./cadence/contracts/SwapPair.cdc"
-		},
-		"SwapRouter": {
-			"source":"./cadence/contracts/SwapRouter.cdc"
-		},
-		"BasicToken1": {
-			"source":"./cadence/contracts/BasicToken1.cdc"
-		},
-		"BasicToken2": {
-			"source":"./cadence/contracts/BasicToken2.cdc"
-		}
+		"SwapConfig": "./cadence/contracts/utils/SwapConfig.cdc",
+		"SwapError": "./cadence/contracts/utils/SwapError.cdc",
+		"SwapFactory": "./cadence/contracts/SwapFactory.cdc",
+		"SwapInterfaces": "./cadence/contracts/utils/SwapInterfaces.cdc",
+		"SwapPair": "./cadence/contracts/SwapPair.cdc",
+		"SwapRouter": "./cadence/contracts/SwapRouter.cdc"
 	},
 	"networks": {
 		"emulator": "127.0.0.1:3569",
@@ -75,18 +66,27 @@
 		"emulator-account": {
 			"address": "f8d6e0586b0a20c7",
 			"key": "6d12eebfef9866c9b6fa92b97c6e705c26a1785b1e7944da701fc545a51d4673"
+		},
+		"user1": {
+			"address": "e03daebed8ca0615",
+			"key": "72c2b531d4a4b4541b82bd885a1f01c4342f1f67c4cd5e6d8caaf32f5b34a850"
+		},
+		"user2": {
+			"address": "045a1763c93006ca",
+			"key": "d8b9f047f5ab7f36ea78dfd1d280c794db7bbc7a26e194f9f056252249d4c1a0"
 		}
 	},
-	"deployments" :{
+	"deployments": {
 		"emulator": {
-			"emulator-account": [
-			  "SwapConfig",
-			  "SwapError",
-			  "SwapInterfaces",
-			  "BasicToken1",
-			  "BasicToken2"
+			"user1": [
+				"SwapConfig",
+				"SwapError",
+				"SwapInterfaces",
+				"SwapRouter",
+				"SwapFactory",
+				"BasicToken1",
+				"BasicToken2"
 			]
 		}
 	}
 }
- 

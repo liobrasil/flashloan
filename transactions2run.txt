@@ -1,0 +1,18 @@
+deploy the last contract
+flow transactions send ./cadence/transactions/deploySwapPair.cdc --signer user1
+
+#put some Flow onto user1 account
+flow transactions send ./cadence/transactions/transferFlow.cdc 100.00 e03daebed8ca0615
+
+#setup user2
+flow transactions send ./cadence/transactions/tokens/setupToken1.cdc --signer user2
+flow transactions send ./cadence/transactions/tokens/setupToken2.cdc --signer user2
+
+#send tokens to user2
+flow transactions send ./cadence/transactions/tokens/sendTokens1.cdc 1000000.00 045a1763c93006ca --signer user1
+flow transactions send ./cadence/transactions/tokens/sendTokens2.cdc 1000000.00 045a1763c93006ca --signer user1
+
+#create a pair with the basic tokens
+flow transactions send ./cadence/transactions/factory/createPair.cdc --signer user1
+
+#add liquidity to the created pair

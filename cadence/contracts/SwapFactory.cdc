@@ -291,7 +291,7 @@ pub contract SwapFactory {
     }
 
     init() {
-        let pairTemplate = Address(0xf8d6e0586b0a20c7)
+        let pairTemplate = self.account.address
         self.pairContractTemplateAddress = pairTemplate
         self.pairs = []
         self.pairMap = {}
