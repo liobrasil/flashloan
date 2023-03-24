@@ -41,6 +41,7 @@ export const readCadence = async (filePath) => {
     .replace('"SwapFactory"', await getFirstDex())
     .replace('"SwapRouter"', await getFirstDex())
     .replace('"SwapPair"', await getFirstDex())
+    .replace('"SwapPairContractName"', '"SwapPair"')
     .replace('"BasicToken1"', await getTokensDeployer())
     .replace('"BasicToken2"', await getTokensDeployer());
 

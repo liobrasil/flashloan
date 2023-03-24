@@ -1,5 +1,11 @@
 import { deployContractByName, sendTransaction } from "@onflow/flow-js-testing";
-import { getFirstDex, getFlashLoanUser, getTokensDeployer, toUFix64 } from "./src/common";
+import {
+  getFirstDex,
+  getFlashLoanUser,
+  getTokensDeployer,
+  toUFix64,
+  readCadence,
+} from "./src/common";
 
 export const deploySwapConfig = async () => {
   const DEX1 = await getFirstDex();
@@ -22,7 +28,6 @@ export const deploySwapInterfaces = async () => {
 // };
 
 export const deploySwapFactory = async (account) => {
-  // const DEX1 = await getFirstDex();
   return deployContractByName({ to: account, name: "SwapFactory" });
 };
 export const deploySwapRouter = async () => {
@@ -32,15 +37,16 @@ export const deploySwapRouter = async () => {
 
 export const deploySwapPair = async () => {
   const DEX1 = await getFirstDex();
-  const name = "others/deploySwapPair";
+  // const name = "others/deploySwapPair";
 
-  // const contractCode = await readCadence("../../contracts/SwapPair.cdc");
-  // const code = (
-  //   await readCadence("../../transactions/others/deploySwapPair.cdc")
-  // ).replace("smartContractCode", string2Hex(contractCode));
+  const contractCode = await readCadence("../../contracts/SwapPair.cdc");
+  const contractCodeEncoded = Buffer.from(contractCode, "utf8").toString("hex");
+  const code = (
+    await readCadence("../../transactions/others/deploySwapPair.cdc")
+  ).replace("smartContractCode", contractCodeEncoded);
 
   const signers = [DEX1];
-  return sendTransaction({ name, signers });
+  return sendTransaction({ code, signers });
 };
 
 export const deployBasicToken1 = async () => {
@@ -126,20 +132,13 @@ export const getFlashLoan = async (
   token1Key,
   flashLoanTokenKey,
   account,
-  amount,
-  
+  amount
 ) => {
   const name = "flashLoan/getFlashLoan";
   const signers = [account];
 
   console.log(account?.address, account);
-  const args = [
-    token0Key,
-    token1Key,
-    flashLoanTokenKey,
-    account,
-    amount,
-  ];
+  const args = [token0Key, token1Key, flashLoanTokenKey, account, amount];
   return sendTransaction({ name, args, signers });
 };
 

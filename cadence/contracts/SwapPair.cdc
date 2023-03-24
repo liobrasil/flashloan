@@ -7,18 +7,11 @@
 */
 
 
-
-import FungibleToken from 0xee82856bf20e2aa6
-import SwapInterfaces from 0x01cf0e2f2f715450
-import SwapConfig from 0x01cf0e2f2f715450
-import SwapError from 0x01cf0e2f2f715450
-import SwapFactory from 0x01cf0e2f2f715450
-
-// import FungibleToken from "./FungibleToken.cdc"
-// import SwapInterfaces from "./SwapInterfaces.cdc"
-// import SwapConfig from "./SwapConfig.cdc"
-// import SwapError from "./SwapError.cdc"
-// import SwapFactory from "./SwapFactory.cdc"
+import FungibleToken from "FungibleToken"
+import SwapInterfaces from "SwapInterfaces"
+import SwapConfig from "SwapConfig"
+import SwapError from "SwapError"
+import SwapFactory from "SwapFactory"
 
 pub contract SwapPair: FungibleToken {
     /// Total supply of pair lpTokens in existence
