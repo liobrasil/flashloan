@@ -21,6 +21,7 @@ export const toOptionalUFix64 = (value) => {
 export const getFirstDex = () => getAccountAddress("DEX1");
 export const getSecondDex = () => getAccountAddress("DEX2");
 export const getTokensDeployer = () => getAccountAddress("TokensDeployer");
+export const getFlashLoanUser = () => getAccountAddress("FlashLoanUser");
 
 // ========================== Utils ===========================================
 export const readCadence = async (filePath) => {

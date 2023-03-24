@@ -1,5 +1,5 @@
 import { deployContractByName, sendTransaction } from "@onflow/flow-js-testing";
-import { getFirstDex, getTokensDeployer, toUFix64 } from "./src/common";
+import { getFirstDex, getFlashLoanUser, getTokensDeployer, toUFix64 } from "./src/common";
 
 export const deploySwapConfig = async () => {
   const DEX1 = await getFirstDex();
@@ -47,6 +47,11 @@ export const deployBasicToken1 = async () => {
 export const deployBasicToken2 = async () => {
   const tokensDeployer = await getTokensDeployer();
   return deployContractByName({ to: tokensDeployer, name: "BasicToken2" });
+};
+
+export const deployArbitrage = async () => {
+  const flashLaonUser = await getFlashLoanUser();
+  return deployContractByName({ to: flashLaonUser, name: "Arbitrage" });
 };
 
 export const setupBasicToken1 = async (account) => {
@@ -108,6 +113,28 @@ export const addLiquidity = async (
     token1InMin,
     token0VaultPath,
     token1VaultPath,
+  ];
+  return sendTransaction({ name, args, signers });
+};
+
+export const getFlashLoan = async (
+  token0Key,
+  token1Key,
+  flashLoanTokenKey,
+  account,
+  amount,
+  
+) => {
+  const name = "flashLoan/getFlashLoan";
+  const signers = [account];
+
+  console.log(account?.address, account);
+  const args = [
+    token0Key,
+    token1Key,
+    flashLoanTokenKey,
+    account,
+    amount,
   ];
   return sendTransaction({ name, args, signers });
 };

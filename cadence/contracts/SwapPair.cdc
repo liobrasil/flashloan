@@ -5,11 +5,20 @@
 # Author: Increment Labs
 
 */
-import FungibleToken from "FungibleToken"
-import SwapInterfaces from "SwapInterfaces"
-import SwapConfig from "SwapConfig"
-import SwapError from "SwapError"
-import SwapFactory from "SwapFactory"
+
+
+
+// import FungibleToken from 0xee82856bf20e2aa6
+// import SwapInterfaces from 0x01cf0e2f2f715450
+// import SwapConfig from 0x01cf0e2f2f715450
+// import SwapError from 0x01cf0e2f2f715450
+// import SwapFactory from 0x01cf0e2f2f715450
+
+import FungibleToken from "./FungibleToken.cdc"
+import SwapInterfaces from "./SwapInterfaces.cdc"
+import SwapConfig from "./SwapConfig.cdc"
+import SwapError from "./SwapError.cdc"
+import SwapFactory from "./SwapFactory.cdc"
 
 pub contract SwapPair: FungibleToken {
     /// Total supply of pair lpTokens in existence
@@ -30,6 +39,8 @@ pub contract SwapPair: FungibleToken {
 
     /// Transaction lock 
     access(self) var lock: Bool
+
+    pub let flashLoanFeesPercentage:UFix64 // in basis points, 100% = 10000
     
     /// √(reserve0 * reserve1), as of immediately after the most recent liquidity event
     pub var rootKLast: UFix64
@@ -329,7 +340,83 @@ pub contract SwapPair: FungibleToken {
             return <- self.token0Vault.withdraw(amount: amountOut)
         }
     }
+    
+    pub fun getFlashLoanFees(amount:UFix64) :UFix64 {
+        return amount *self.flashLoanFeesPercentage/10000.0;
+    }
 
+    pub fun flashLoan(flashLoanReceiver:Address, tokenKey:String, amount:UFix64) {
+        
+        pre {
+            tokenKey==self.token0Key || tokenKey==self.token1Key:
+                SwapError.ErrorEncode(
+                    msg: "SwapPair: not enough reserve for flash loan",
+                    err: SwapError.ErrorCode.INVALID_PARAMETERS
+                )
+            self.lock == false: SwapError.ErrorEncode(msg: "SwapPair: Reentrant", err: SwapError.ErrorCode.REENTRANT)
+        }
+        post {
+            self.lock == false: "SwapPair: unlock"
+        }
+        self.lock = true
+        var flashLoanVault:@FungibleToken.Vault? <- nil;
+
+        if (tokenKey==self.token1Key) {
+            // assert(amount<= self.token1Vault.balance!, message:
+            //     SwapError.ErrorEncode(
+            //         msg: "SwapPair: INSUFFICIENT_AMOUNT",
+            //         err: SwapError.ErrorCode.INVALID_PARAMETERS
+            //     )
+            // )
+
+            flashLoanVault <-! self.token1Vault.withdraw(amount: amount)
+        }
+
+        if (tokenKey==self.token0Key) {
+            // assert(amount<= self.token0Vault.balance!, message:
+            //     SwapError.ErrorEncode(
+            //         msg: "SwapPair: INSUFFICIENT_AMOUNT",
+            //         err: SwapError.ErrorCode.INVALID_PARAMETERS
+            //     )
+            // )
+            flashLoanVault <-! self.token0Vault.withdraw(amount: amount)
+        }
+
+        let publicAccount = getAccount(flashLoanReceiver);
+        let flashLoanReceiver  = publicAccount.getCapability(/public/flashLoanReceiver).borrow<&{SwapInterfaces.FlashLoanReceiver}>();
+        
+        let fees = self.getFlashLoanFees(amount:amount);
+        // perform flash loan
+        
+        let returnedVault <- flashLoanReceiver?.onFlashLoan(flashLoanVault:<-flashLoanVault!, tokenKey:tokenKey, fees:fees);
+
+        // assert(returnedVault.isInstance(self.token0VaultType) || returnedVault.isInstance(self.token1VaultType), message:
+        //     SwapError.ErrorEncode(
+        //         msg: "SwapPair: INSUFFICIENT_AMOUNT",
+        //         err: SwapError.ErrorCode.INVALID_PARAMETERS
+        //     )
+        // )
+
+        // assert(returnedVault.balance>= amount+fees, message:
+        //     SwapError.ErrorEncode(
+        //         msg: "SwapPair: INSUFFICIENT_AMOUNT",
+        //         err: SwapError.ErrorCode.INVALID_PARAMETERS
+        //     )
+        // )
+
+        if (returnedVault.isInstance(self.token0VaultType)) {
+            self.token0Vault.deposit(from:<-returnedVault!);
+        }
+        else if (returnedVault.isInstance(self.token1VaultType)) {
+            self.token1Vault.deposit(from:<-returnedVault!);
+        } else {
+            destroy returnedVault;
+            panic("Not correct type vault returned")
+        }
+
+        self.lock = false
+
+    }
     /// Update cumulative price on the first call per block
     ///
     access(self) fun _update(reserve0LastScaled: UInt256, reserve1LastScaled: UInt256) {
@@ -388,6 +475,10 @@ pub contract SwapPair: FungibleToken {
     pub resource PairPublic: SwapInterfaces.PairPublic {
         pub fun swap(vaultIn: @FungibleToken.Vault, exactAmountOut: UFix64?): @FungibleToken.Vault {
             return <- SwapPair.swap(vaultIn: <-vaultIn, exactAmountOut: exactAmountOut)
+        }
+
+        pub fun flashLoan(flashLoanReceiver: Address, tokenKey:String, amount:UFix64) {
+            return SwapPair.flashLoan(flashLoanReceiver:flashLoanReceiver, tokenKey:tokenKey, amount:amount)
         }
 
         pub fun removeLiquidity(lpTokenVault: @FungibleToken.Vault) : @[FungibleToken.Vault] {
@@ -451,6 +542,9 @@ pub contract SwapPair: FungibleToken {
         self.blockTimestampLast = getCurrentBlock().timestamp
         self.price0CumulativeLastScaled = 0
         self.price1CumulativeLastScaled = 0
+
+        self.flashLoanFeesPercentage = 0.0 // 0.1%
+
 
         self.rootKLast = 0.0
         self._reservedFields = {}

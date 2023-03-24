@@ -5,13 +5,14 @@
 # Author: Increment Labs
 
 */
-import FungibleToken from "FungibleToken"
+import FungibleToken from "./FungibleToken.cdc"
 
 pub contract interface SwapInterfaces {
     pub resource interface PairPublic {
         pub fun addLiquidity(tokenAVault: @FungibleToken.Vault, tokenBVault: @FungibleToken.Vault): @FungibleToken.Vault
         pub fun removeLiquidity(lpTokenVault: @FungibleToken.Vault) : @[FungibleToken.Vault]
         pub fun swap(vaultIn: @FungibleToken.Vault, exactAmountOut: UFix64?): @FungibleToken.Vault
+        pub fun flashLoan(flashLoanReceiver: Address, tokenKey:String, amount:UFix64)
         pub fun getAmountIn(amountOut: UFix64, tokenOutKey: String): UFix64
         pub fun getAmountOut(amountIn: UFix64, tokenInKey: String): UFix64
         pub fun getPrice0CumulativeLastScaled(): UInt256
@@ -27,6 +28,10 @@ pub contract interface SwapInterfaces {
         pub fun getLpTokenBalance(pairAddr: Address): UFix64
         pub fun getAllLPTokens(): [Address]
         pub fun getSlicedLPTokens(from: UInt64, to: UInt64): [Address]
+    }
+
+    pub resource interface FlashLoanReceiver {
+        pub fun onFlashLoan(flashLoanVault: @FungibleToken.Vault, tokenKey:String, fees:UFix64): @FungibleToken.Vault
     }
 }
  
