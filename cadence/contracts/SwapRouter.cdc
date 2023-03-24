@@ -5,11 +5,11 @@
 # Author: Increment Labs
 
 */
-import FungibleToken from "./flow_core/FungibleToken.cdc"
-import SwapFactory from "./SwapFactory.cdc"
-import SwapConfig from "./utils/SwapConfig.cdc"
-import SwapError from "./utils/SwapError.cdc"
-import SwapInterfaces from "./utils/SwapInterfaces.cdc"
+import FungibleToken from "FungibleToken"
+import SwapFactory from "SwapFactory"
+import SwapConfig from "SwapConfig"
+import SwapError from "SwapError"
+import SwapInterfaces from "SwapInterfaces"
 
 pub contract SwapRouter {
     /// Perform a chained swap calculation starting with exact amountIn

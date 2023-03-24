@@ -5,7 +5,7 @@
 # Author: Increment Labs
 
 */
-import FungibleToken from "../flow_core/FungibleToken.cdc"
+import FungibleToken from "FungibleToken"
 
 pub contract interface SwapInterfaces {
     pub resource interface PairPublic {

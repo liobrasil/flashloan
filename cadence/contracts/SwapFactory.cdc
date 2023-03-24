@@ -5,10 +5,10 @@
 # Author: Increment Labs
 
 */
-import FungibleToken from "./flow_core/FungibleToken.cdc"
-import SwapError from "./utils/SwapError.cdc"
-import SwapConfig from "./utils/SwapConfig.cdc"
-import SwapInterfaces from "./utils/SwapInterfaces.cdc"
+import FungibleToken from "FungibleToken"
+import SwapError from "SwapError"
+import SwapConfig from "SwapConfig"
+import SwapInterfaces from "SwapInterfaces"
 
 pub contract SwapFactory {
     /// Account which has deployed pair template contract

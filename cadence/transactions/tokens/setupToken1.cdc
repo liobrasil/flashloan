@@ -1,5 +1,5 @@
-import FungibleToken from "../../contracts/flow_core/FungibleToken.cdc"
-import BasicToken1 from "../../contracts/BasicToken1.cdc"
+import FungibleToken from "FungibleToken"
+import BasicToken1 from "BasicToken1"
 
 transaction {
 
