@@ -70,10 +70,17 @@ export const setupBasicToken2 = async (account) => {
   return sendTransaction({ name, signers });
 };
 
-export const createPair = async (account) => {
-  const name = "factory/createPair";
+export const createPair = async (account, dexAccount) => {
+  let dex = dexAccount;
+  if (!dex) {
+    dex = await getFirstDex();
+  }
+  const code = await readCadence(
+    "../../transactions/factory/createPair.cdc",
+    dex
+  );
   const signers = [account];
-  return sendTransaction({ name, signers });
+  return sendTransaction({ code, signers });
 };
 
 export const transferToken1 = async (value, account) => {
@@ -95,16 +102,16 @@ export const transferToken2 = async (value, account) => {
 };
 
 export const addLiquidity = async (
-  dex,
   token0Key,
   token1Key,
   token0InDesired,
   token0InMin,
   token1InDesired,
   token1InMin,
-  account
+  account,
+  dex
 ) => {
-  const code = await await readCadence(
+  const code = await readCadence(
     "../../transactions/pair/addLiquidity.cdc",
     dex
   );
@@ -130,14 +137,18 @@ export const getFlashLoan = async (
   token1Key,
   flashLoanTokenKey,
   account,
-  amount
+  amount,
+  provider
 ) => {
-  const name = "flashLoan/getFlashLoan";
+  const code = await readCadence(
+    "../../transactions/flashLoan/getFlashLoan.cdc",
+    provider
+  );
   const signers = [account];
 
   console.log(account?.address, account);
   const args = [token0Key, token1Key, flashLoanTokenKey, account, amount];
-  return sendTransaction({ name, args, signers });
+  return sendTransaction({ code, args, signers });
 };
 
 // NEED TO UPDATE THIS FUNCTION to include DEX as parameter

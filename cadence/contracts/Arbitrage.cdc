@@ -1,9 +1,10 @@
-import FungibleToken from "./FungibleToken.cdc"
-import SwapInterfaces from "./SwapInterfaces.cdc"
+import FungibleToken from "FungibleToken"
+import SwapInterfaces from "SwapInterfaces"
 
 pub contract Arbitrage {
 
     pub event ReceivedFlashLoan(tokenKey:String, amount:UFix64);
+    
     pub resource FlashLoanReceiver:SwapInterfaces.FlashLoanReceiver {
         pub fun onFlashLoan(flashLoanVault:@FungibleToken.Vault, tokenKey:String, fees:UFix64):@FungibleToken.Vault {
 

@@ -25,6 +25,8 @@ export const getFlashLoanProvider = () =>
 export const getTokensDeployer = () => getAccountAddress("TokensDeployer");
 export const getFlashLoanUser = () => getAccountAddress("FlashLoanUser");
 export const getAlice = () => getAccountAddress("Alice");
+export const getBob = () => getAccountAddress("Bob");
+export const getCharlie = () => getAccountAddress("Charlie");
 
 // ========================== Utils ===========================================
 export const readCadence = async (filePath, account) => {
@@ -42,9 +44,9 @@ export const readCadence = async (filePath, account) => {
       '"FlowToken"',
       "0x" + emulatorConfig.contracts.FlowToken.aliases.emulator
     )
-    .replace('"SwapInterfaces"', await getFirstDex())
-    .replace('"SwapConfig"', await getFirstDex())
-    .replace('"SwapError"', await getFirstDex())
+    .replace('"SwapInterfaces"', DEX)
+    .replace('"SwapConfig"', DEX)
+    .replace('"SwapError"', DEX)
     .replace('"SwapFactory"', DEX)
     .replace('"SwapRouter"', DEX)
     .replace('"SwapPair"', DEX)
