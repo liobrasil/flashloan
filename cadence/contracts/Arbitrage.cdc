@@ -8,9 +8,9 @@ pub contract Arbitrage {
         pub fun onFlashLoan(flashLoanVault:@FungibleToken.Vault, tokenKey:String, fees:UFix64):@FungibleToken.Vault {
 
             emit ReceivedFlashLoan(tokenKey:tokenKey, amount:flashLoanVault.balance);
-            // Add arbitrage logic here
+            // Add arbitrage, liquidation logic here
             
-                return <-flashLoanVault
+            return <-flashLoanVault
             
         }
     }

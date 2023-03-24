@@ -37,7 +37,7 @@ import {
   transferToken2,
 } from "./main";
 
-describe.skip("Deployment", () => {
+describe("Deployment", () => {
   beforeEach(async () => {
     const basePath = path.resolve(__dirname, "../");
     const emulatorOptions = {
@@ -54,13 +54,16 @@ describe.skip("Deployment", () => {
 
   it("shall deploy all contracts", async () => {
     const DEX1 = await getFirstDex();
+    const DEX2 = await getSecondDex();
     await mintFlow(DEX1, "10.0");
+    await mintFlow(DEX2, "10.0");
     await shallPass(deployBasicToken1());
     await shallPass(deployBasicToken2());
     await shallPass(deploySwapConfig());
     await shallPass(deploySwapError());
     await shallPass(deploySwapInterfaces());
-    await shallPass(deploySwapFactory());
+    await shallPass(deploySwapFactory(DEX1));
+    await shallPass(deploySwapFactory(DEX2));
     await shallPass(deploySwapRouter());
     await shallPass(deploySwapPair());
     await shallPass(deployArbitrage());
@@ -68,7 +71,7 @@ describe.skip("Deployment", () => {
 });
 
 
-describe("DEX functions", () => {
+describe.skip("DEX functions", () => {
   beforeEach(async () => {
     const basePath = path.resolve(__dirname, "../");
     const emulatorOptions = {

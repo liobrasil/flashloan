@@ -16,11 +16,15 @@ export const deploySwapInterfaces = async () => {
   return deployContractByName({ to: DEX1, name: "SwapInterfaces" });
 };
 
-export const deploySwapFactory = async () => {
-  const DEX1 = await getFirstDex();
-  return deployContractByName({ to: DEX1, name: "SwapFactory" });
-};
+// export const deploySwapFactory = async () => {
+//   const DEX1 = await getFirstDex();
+//   return deployContractByName({ to: DEX1, name: "SwapFactory" });
+// };
 
+export const deploySwapFactory = async (account) => {
+  // const DEX1 = await getFirstDex();
+  return deployContractByName({ to: account, name: "SwapFactory" });
+};
 export const deploySwapRouter = async () => {
   const DEX1 = await getFirstDex();
   return deployContractByName({ to: DEX1, name: "SwapRouter" });

@@ -79,3 +79,25 @@ You can already import certain common contracts we included for you, just make s
 - Cadence Language Reference https://developers.flow.com/cadence/language
 - Flow Smart Contract Project Development Standards https://developers.flow.com/cadence/style-guide/project-development-tips
 - Cadence anti-patterns https://developers.flow.com/cadence/anti-patterns
+
+
+
+
+DEX1 
+Alice - > provides liquidity - 100000 T1, 100000 T2 
+
+DEX2 
+Bob -> provide liquidity - 100000 T1, 150000 T2
+
+
+DEX3 
+Charlie -> liquidity -  100000 T1, 100000 T2
+
+
+
+User -> get a loan of 5000 T2 from Dex3 
+he sells 5000 T2 on DEX1 for 5000 T1 
+
+sell 5000 T1 for 7500 T2 on DEX2 
+
+return 5000 + 5(fees) T2 to DEX3, and get 2500 T2 as profit and store in user's vault
