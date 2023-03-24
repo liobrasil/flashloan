@@ -8,17 +8,17 @@
 
 
 
-// import FungibleToken from 0xee82856bf20e2aa6
-// import SwapInterfaces from 0x01cf0e2f2f715450
-// import SwapConfig from 0x01cf0e2f2f715450
-// import SwapError from 0x01cf0e2f2f715450
-// import SwapFactory from 0x01cf0e2f2f715450
+import FungibleToken from 0xee82856bf20e2aa6
+import SwapInterfaces from 0x01cf0e2f2f715450
+import SwapConfig from 0x01cf0e2f2f715450
+import SwapError from 0x01cf0e2f2f715450
+import SwapFactory from 0x01cf0e2f2f715450
 
-import FungibleToken from "./FungibleToken.cdc"
-import SwapInterfaces from "./SwapInterfaces.cdc"
-import SwapConfig from "./SwapConfig.cdc"
-import SwapError from "./SwapError.cdc"
-import SwapFactory from "./SwapFactory.cdc"
+// import FungibleToken from "./FungibleToken.cdc"
+// import SwapInterfaces from "./SwapInterfaces.cdc"
+// import SwapConfig from "./SwapConfig.cdc"
+// import SwapError from "./SwapError.cdc"
+// import SwapFactory from "./SwapFactory.cdc"
 
 pub contract SwapPair: FungibleToken {
     /// Total supply of pair lpTokens in existence
@@ -62,6 +62,8 @@ pub contract SwapPair: FungibleToken {
     /// direction: 0 - in self.token0 swapped to out self.token1
     ///            1 - in self.token1 swapped to out self.token0
     pub event Swap(inTokenAmount: UFix64, outTokenAmount: UFix64, direction: UInt8)
+
+    pub event FlashLoanCompleted(flashLoanReceiver: Address, tokenKey:String, sentAmount: UFix64, receivedAmount:UFix64)
 
     /// Lptoken Vault
     ///
@@ -362,47 +364,54 @@ pub contract SwapPair: FungibleToken {
         var flashLoanVault:@FungibleToken.Vault? <- nil;
 
         if (tokenKey==self.token1Key) {
-            // assert(amount<= self.token1Vault.balance!, message:
-            //     SwapError.ErrorEncode(
-            //         msg: "SwapPair: INSUFFICIENT_AMOUNT",
-            //         err: SwapError.ErrorCode.INVALID_PARAMETERS
-            //     )
-            // )
+            assert(amount<= self.token1Vault.balance!, message:
+                SwapError.ErrorEncode(
+                    msg: "SwapPair: INSUFFICIENT_AMOUNT",
+                    err: SwapError.ErrorCode.INVALID_PARAMETERS
+                )
+            )
 
             flashLoanVault <-! self.token1Vault.withdraw(amount: amount)
         }
 
         if (tokenKey==self.token0Key) {
-            // assert(amount<= self.token0Vault.balance!, message:
-            //     SwapError.ErrorEncode(
-            //         msg: "SwapPair: INSUFFICIENT_AMOUNT",
-            //         err: SwapError.ErrorCode.INVALID_PARAMETERS
-            //     )
-            // )
+            assert(amount<= self.token0Vault.balance!, message:
+                SwapError.ErrorEncode(
+                    msg: "SwapPair: INSUFFICIENT_AMOUNT",
+                    err: SwapError.ErrorCode.INVALID_PARAMETERS
+                )
+            )
             flashLoanVault <-! self.token0Vault.withdraw(amount: amount)
         }
 
         let publicAccount = getAccount(flashLoanReceiver);
-        let flashLoanReceiver  = publicAccount.getCapability(/public/flashLoanReceiver).borrow<&{SwapInterfaces.FlashLoanReceiver}>();
-        
+        let flashLoanReceiverResource  = publicAccount.getCapability(/public/flashLoanReceiver).borrow<&{SwapInterfaces.FlashLoanReceiver}>();
+
         let fees = self.getFlashLoanFees(amount:amount);
         // perform flash loan
         
-        let returnedVault <- flashLoanReceiver?.onFlashLoan(flashLoanVault:<-flashLoanVault!, tokenKey:tokenKey, fees:fees);
+        let returnedVault <- flashLoanReceiverResource!.onFlashLoan(flashLoanVault:<-flashLoanVault!, tokenKey:tokenKey, fees:fees);
 
-        // assert(returnedVault.isInstance(self.token0VaultType) || returnedVault.isInstance(self.token1VaultType), message:
-        //     SwapError.ErrorEncode(
-        //         msg: "SwapPair: INSUFFICIENT_AMOUNT",
-        //         err: SwapError.ErrorCode.INVALID_PARAMETERS
-        //     )
-        // )
+        assert(returnedVault.isInstance(self.token0VaultType) || returnedVault.isInstance(self.token1VaultType), message:
+            SwapError.ErrorEncode(
+                msg: "SwapPair: INSUFFICIENT_AMOUNT",
+                err: SwapError.ErrorCode.INVALID_PARAMETERS
+            )
+        )
 
-        // assert(returnedVault.balance>= amount+fees, message:
-        //     SwapError.ErrorEncode(
-        //         msg: "SwapPair: INSUFFICIENT_AMOUNT",
-        //         err: SwapError.ErrorCode.INVALID_PARAMETERS
-        //     )
-        // )
+        assert(returnedVault.balance>= amount+fees, message:
+            SwapError.ErrorEncode(
+                msg: "SwapPair: INSUFFICIENT_AMOUNT",
+                err: SwapError.ErrorCode.INVALID_PARAMETERS
+            )
+        )
+
+        emit FlashLoanCompleted(
+            flashLoanReceiver:flashLoanReceiver, 
+            tokenKey:tokenKey, 
+            sentAmount:amount, 
+            receivedAmount:returnedVault.balance
+        )
 
         if (returnedVault.isInstance(self.token0VaultType)) {
             self.token0Vault.deposit(from:<-returnedVault!);
@@ -413,6 +422,7 @@ pub contract SwapPair: FungibleToken {
             destroy returnedVault;
             panic("Not correct type vault returned")
         }
+
 
         self.lock = false
 
