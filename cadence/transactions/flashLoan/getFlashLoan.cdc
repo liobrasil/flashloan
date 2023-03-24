@@ -10,7 +10,7 @@ transaction(
     flashLoanReceiver:Address,
     amount:UFix64
 ) {
-    prepare() {
+    prepare(signer: AuthAccount) {
         let pairAddr = SwapFactory.getPairAddress(token0Key: token0Key, token1Key: token1Key)
             ?? panic("AddLiquidity: nonexistent pair ".concat(token0Key).concat(" <-> ").concat(token1Key).concat(", create pair first"))
         let pairPublicRef = getAccount(pairAddr).getCapability<&{SwapInterfaces.PairPublic}>(SwapConfig.PairPublicPath).borrow()!

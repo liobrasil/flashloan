@@ -22,30 +22,21 @@ export const deploySwapInterfaces = async () => {
   return deployContractByName({ to: DEX1, name: "SwapInterfaces" });
 };
 
-// export const deploySwapFactory = async () => {
-//   const DEX1 = await getFirstDex();
-//   return deployContractByName({ to: DEX1, name: "SwapFactory" });
-// };
-
 export const deploySwapFactory = async (account) => {
   return deployContractByName({ to: account, name: "SwapFactory" });
 };
-export const deploySwapRouter = async () => {
-  const DEX1 = await getFirstDex();
-  return deployContractByName({ to: DEX1, name: "SwapRouter" });
+export const deploySwapRouter = async (account) => {
+  return deployContractByName({ to: account, name: "SwapRouter" });
 };
 
-export const deploySwapPair = async () => {
-  const DEX1 = await getFirstDex();
-  // const name = "others/deploySwapPair";
-
+export const deploySwapPair = async (account) => {
   const contractCode = await readCadence("../../contracts/SwapPair.cdc");
   const contractCodeEncoded = Buffer.from(contractCode, "utf8").toString("hex");
   const code = (
     await readCadence("../../transactions/others/deploySwapPair.cdc")
   ).replace("smartContractCode", contractCodeEncoded);
 
-  const signers = [DEX1];
+  const signers = [account];
   return sendTransaction({ code, signers });
 };
 
@@ -59,9 +50,12 @@ export const deployBasicToken2 = async () => {
   return deployContractByName({ to: tokensDeployer, name: "BasicToken2" });
 };
 
-export const deployArbitrage = async () => {
-  const flashLaonUser = await getFlashLoanUser();
-  return deployContractByName({ to: flashLaonUser, name: "Arbitrage" });
+export const deployArbitrage = async (account) => {
+  let flashLoanUser = account;
+  if (!account) {
+    flashLoanUser = await getFlashLoanUser();
+  }
+  return deployContractByName({ to: flashLoanUser, name: "Arbitrage" });
 };
 
 export const setupBasicToken1 = async (account) => {
@@ -101,6 +95,7 @@ export const transferToken2 = async (value, account) => {
 };
 
 export const addLiquidity = async (
+  dex,
   token0Key,
   token1Key,
   token0InDesired,
@@ -109,7 +104,10 @@ export const addLiquidity = async (
   token1InMin,
   account
 ) => {
-  const name = "pair/addLiquidity";
+  const code = await await readCadence(
+    "../../transactions/pair/addLiquidity.cdc",
+    dex
+  );
   const signers = [account];
   const token0VaultPath = "/storage/BasicToken1Vault";
   const token1VaultPath = "/storage/BasicToken2Vault";
@@ -124,7 +122,7 @@ export const addLiquidity = async (
     token0VaultPath,
     token1VaultPath,
   ];
-  return sendTransaction({ name, args, signers });
+  return sendTransaction({ code, args, signers });
 };
 
 export const getFlashLoan = async (
@@ -142,6 +140,7 @@ export const getFlashLoan = async (
   return sendTransaction({ name, args, signers });
 };
 
+// NEED TO UPDATE THIS FUNCTION to include DEX as parameter
 export const removeLiquidity = async (
   token0Key,
   token1Key,

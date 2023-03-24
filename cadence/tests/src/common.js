@@ -20,11 +20,18 @@ export const toOptionalUFix64 = (value) => {
 
 export const getFirstDex = () => getAccountAddress("DEX1");
 export const getSecondDex = () => getAccountAddress("DEX2");
+export const getFlashLoanProvider = () =>
+  getAccountAddress("flashLoanProvider");
 export const getTokensDeployer = () => getAccountAddress("TokensDeployer");
 export const getFlashLoanUser = () => getAccountAddress("FlashLoanUser");
+export const getAlice = () => getAccountAddress("Alice");
 
 // ========================== Utils ===========================================
-export const readCadence = async (filePath) => {
+export const readCadence = async (filePath, account) => {
+  let DEX = account;
+  if (!account) {
+    DEX = await getFirstDex();
+  }
   let fileObject = fs
     .readFileSync(path.join(__dirname, filePath), "utf8")
     .replace(
@@ -38,9 +45,9 @@ export const readCadence = async (filePath) => {
     .replace('"SwapInterfaces"', await getFirstDex())
     .replace('"SwapConfig"', await getFirstDex())
     .replace('"SwapError"', await getFirstDex())
-    .replace('"SwapFactory"', await getFirstDex())
-    .replace('"SwapRouter"', await getFirstDex())
-    .replace('"SwapPair"', await getFirstDex())
+    .replace('"SwapFactory"', DEX)
+    .replace('"SwapRouter"', DEX)
+    .replace('"SwapPair"', DEX)
     .replace('"SwapPairContractName"', '"SwapPair"')
     .replace('"BasicToken1"', await getTokensDeployer())
     .replace('"BasicToken2"', await getTokensDeployer());
