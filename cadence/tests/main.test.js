@@ -100,9 +100,9 @@ describe("DEX functions", () => {
     const Alice = await getAccountAddress("Alice");
     await mintFlow(Alice, "10.0");
     let [txResult] = await createPair(Alice);
+
     let data = txResult.events[10].data;
     console.log("-----data", data);
-    console.log("-----Pair Address: ", data.pairAddress);
 
     //Setup BasicTokens collection
     await shallPass(setupBasicToken1(Alice));
@@ -117,7 +117,7 @@ describe("DEX functions", () => {
     const amountToken1 = 100;
     const amountToken1Min = 99;
 
-    await shallPass(
+    [txResult] = await shallPass(
       addLiquidity(
         data.token0Key,
         data.token1Key,
@@ -128,6 +128,7 @@ describe("DEX functions", () => {
         Alice
       )
     );
+    console.log("-----Added liquidity", txResult.events);
   });
 
   it("user can remove liquidity", async () => {
@@ -147,7 +148,7 @@ describe("DEX functions", () => {
     const amountToken0Min = 99;
     const amountToken1 = 100;
     const amountToken1Min = 99;
-    const lpTokenAmount = 20;
+    const lpTokenAmount = 99.99999999;
 
     await addLiquidity(
       data.token0Key,
@@ -158,8 +159,9 @@ describe("DEX functions", () => {
       amountToken1Min,
       Alice
     );
-    await shallPass(
+    [txResult] = await shallPass(
       removeLiquidity(data.token0Key, data.token1Key, lpTokenAmount, Alice)
     );
+    console.log("-----Removed liquidity", txResult.events);
   });
 });
