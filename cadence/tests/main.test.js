@@ -143,7 +143,23 @@ describe("DEX functions", () => {
     transferToken1(1000, Alice);
     transferToken2(1000, Alice);
 
-    addLiquidity(data.token0Key, data.token1Key, 100, 99, 100, 99, Alice);
-    await shallPass(removeLiquidity(data.token0Key, data.token1Key, 2, Alice));
+    const amountToken0 = 100;
+    const amountToken0Min = 99;
+    const amountToken1 = 100;
+    const amountToken1Min = 99;
+    const lpTokenAmount = 20;
+
+    await addLiquidity(
+      data.token0Key,
+      data.token1Key,
+      amountToken0,
+      amountToken0Min,
+      amountToken1,
+      amountToken1Min,
+      Alice
+    );
+    await shallPass(
+      removeLiquidity(data.token0Key, data.token1Key, lpTokenAmount, Alice)
+    );
   });
 });
