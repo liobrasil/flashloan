@@ -29,11 +29,15 @@ export const getBob = () => getAccountAddress("Bob");
 export const getCharlie = () => getAccountAddress("Charlie");
 
 // ========================== Utils ===========================================
-export const readCadence = async (filePath, account) => {
+export const readCadence = async (filePath, account, skip = false) => {
   let DEX = account;
   if (!account) {
     DEX = await getFirstDex();
   }
+  let DEX1 = await getFirstDex();
+  let DEX2 = await getSecondDex();
+  let FlashLoanProvider = await getFlashLoanProvider();
+
   let fileObject = fs
     .readFileSync(path.join(__dirname, filePath), "utf8")
     .replace(
@@ -43,14 +47,46 @@ export const readCadence = async (filePath, account) => {
     .replace(
       '"FlowToken"',
       "0x" + emulatorConfig.contracts.FlowToken.aliases.emulator
-    )
+    );
+
+    if (account==DEX1 && !skip) {
+      // console.log("dex1");
+      fileObject = fileObject
+      .replaceAll("SwapFactory", "SwapFactory1").
+      replaceAll("SwapPair", "SwapPair1")
+      .replaceAll("SwapRouter", "SwapRouter1");
+    } 
+    if (account==DEX2 && !skip){
+      // console.log("2");
+      fileObject = fileObject
+      .replaceAll("SwapFactory", "SwapFactory2")
+      .replaceAll("SwapPair", "SwapPair2")
+      .replaceAll("SwapRouter", "SwapRouter2");
+    } 
+
+    if (account==FlashLoanProvider && !skip){
+      // console.log("3");
+      fileObject = fileObject
+      .replaceAll("SwapFactory", "SwapFactory3")
+      .replaceAll("SwapPair", "SwapPair3")
+      .replaceAll("SwapRouter", "SwapRouter3");
+    } 
+
+    fileObject = fileObject
     .replace('"SwapInterfaces"', DEX)
     .replace('"SwapConfig"', DEX)
     .replace('"SwapError"', DEX)
     .replace('"SwapFactory"', DEX)
-    .replace('"SwapRouter"', DEX)
+    .replace('"SwapFactory1"', DEX1)
+    .replace('"SwapFactory2"', DEX2)
+    .replace('"SwapFactory3"', FlashLoanProvider)
+    .replace('"SwapPair1"', DEX1)
+    .replace('"SwapPair2"', DEX2)
+    .replace('"SwapPair3"', FlashLoanProvider)
+    .replace('"SwapRouter1"', DEX1)
+    .replace('"SwapRouter2"', DEX2)
+    .replace('"SwapRouter3"', FlashLoanProvider)
     .replace('"SwapPair"', DEX)
-    .replace('"SwapPairContractName"', '"SwapPair"')
     .replace('"BasicToken1"', await getTokensDeployer())
     .replace('"BasicToken2"', await getTokensDeployer());
 

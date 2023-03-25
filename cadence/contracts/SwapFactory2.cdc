@@ -5,10 +5,10 @@
 # Author: Increment Labs
 
 */
-import FungibleToken from "./FungibleToken.cdc"
-import SwapError from "./SwapError.cdc"
-import SwapConfig from "./SwapConfig.cdc"
-import SwapInterfaces from "./SwapInterfaces.cdc"
+import FungibleToken from "FungibleToken"
+import SwapError from "SwapError"
+import SwapConfig from "SwapConfig"
+import SwapInterfaces from "SwapInterfaces"
 
 pub contract SwapFactory2 {
     /// Account which has deployed pair template contract
@@ -37,7 +37,7 @@ pub contract SwapFactory2 {
 
     /// Create Pair
     ///
-    /// @Param - token0/1Vault: use createEmptyVault() to create init vault types for SwapPair
+    /// @Param - token0/1Vault: use createEmptyVault() to create init vault types for SwapPair2
     /// @Param - accountCreationFee: fee (0.001 FlowToken) pay for the account creation.
     ///
     pub fun createPair(token0Vault: @FungibleToken.Vault, token1Vault: @FungibleToken.Vault, accountCreationFee: @FungibleToken.Vault): Address {
@@ -89,10 +89,10 @@ pub contract SwapFactory2 {
 
         let pairAddress = pairAccount.address
         
-        let pairTemplateContract = getAccount(self.pairContractTemplateAddress).contracts.get(name: "SwapPair")!
+        let pairTemplateContract = getAccount(self.pairContractTemplateAddress).contracts.get(name: "SwapPair2")!
         /// Deploy pair contract with initialized parameters
         pairAccount.contracts.add(
-            name: "SwapPair",
+            name: "SwapPair2",
             code: pairTemplateContract.code,
             token0Vault: <-token0Vault,
             token1Vault: <-token1Vault
@@ -277,16 +277,16 @@ pub contract SwapFactory2 {
     ///
     pub resource Admin {
         pub fun setPairContractTemplateAddress(newAddr: Address) {
-            emit PairTemplateAddressChanged(oldTemplate: SwapFactory.pairContractTemplateAddress, newTemplate: newAddr)
-            SwapFactory.pairContractTemplateAddress = newAddr
+            emit PairTemplateAddressChanged(oldTemplate: SwapFactory2.pairContractTemplateAddress, newTemplate: newAddr)
+            SwapFactory2.pairContractTemplateAddress = newAddr
         }
         pub fun setFeeTo(feeToAddr: Address) {
-            emit FeeToAddressChanged(oldFeeTo: SwapFactory.feeTo, newFeeTo: feeToAddr)
-            SwapFactory.feeTo = feeToAddr
+            emit FeeToAddressChanged(oldFeeTo: SwapFactory2.feeTo, newFeeTo: feeToAddr)
+            SwapFactory2.feeTo = feeToAddr
         }
         pub fun setPairAccountPublicKey(publicKey: String?) {
-            emit PairAccountPublicKeyChanged(oldPublicKey: SwapFactory.pairAccountPublicKey, newPublicKey: publicKey)
-            SwapFactory.pairAccountPublicKey = publicKey
+            emit PairAccountPublicKeyChanged(oldPublicKey: SwapFactory2.pairAccountPublicKey, newPublicKey: publicKey)
+            SwapFactory2.pairAccountPublicKey = publicKey
         }
     }
 

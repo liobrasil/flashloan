@@ -9,7 +9,10 @@ pub contract SwapConfig {
     pub var PairPublicPath: PublicPath
     pub var LpTokenCollectionStoragePath: StoragePath
     pub var LpTokenCollectionPublicPath: PublicPath
-
+    
+    pub var FlashLoanReceiverStoragePath: StoragePath
+    pub var FlashLoanReceiverPublicPath: PublicPath
+    
     /// Scale factor applied to fixed point number calculation.
     /// Note: The use of scale factor is due to fixed point number in cadence is only precise to 1e-8:
     /// https://docs.onflow.org/cadence/language/values-and-types/#fixed-point-numbers
@@ -129,7 +132,8 @@ pub contract SwapConfig {
         self.PairPublicPath = /public/increment_swap_pair
         self.LpTokenCollectionStoragePath = /storage/increment_swap_lptoken_collection
         self.LpTokenCollectionPublicPath  = /public/increment_swap_lptoken_collection
-        
+        self.FlashLoanReceiverStoragePath = /storage/flashLoanReceiver
+        self.FlashLoanReceiverPublicPath  = /public/flashLoanReceiver
         /// 1e18
         self.scaleFactor = 1_000_000_000_000_000_000
         /// 1.0e8

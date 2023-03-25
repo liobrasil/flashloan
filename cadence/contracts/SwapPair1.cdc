@@ -11,9 +11,9 @@ import FungibleToken from "FungibleToken"
 import SwapInterfaces from "SwapInterfaces"
 import SwapConfig from "SwapConfig"
 import SwapError from "SwapError"
-import SwapFactory from "SwapFactory3"
+import SwapFactory1 from "SwapFactory1"
 
-pub contract SwapPair3: FungibleToken {
+pub contract SwapPair1: FungibleToken {
     /// Total supply of pair lpTokens in existence
     pub var totalSupply: UFix64
     
@@ -93,7 +93,7 @@ pub contract SwapPair3: FungibleToken {
         /// been consumed and therefore can be destroyed.
         ///
         pub fun deposit(from: @FungibleToken.Vault) {
-            let vault <- from as! @SwapPair.Vault
+            let vault <- from as! @SwapPair1.Vault
             self.balance = self.balance + vault.balance
             emit TokensDeposited(amount: vault.balance, to: self.owner?.address)
             vault.balance = 0.0
@@ -101,7 +101,7 @@ pub contract SwapPair3: FungibleToken {
         }
 
         destroy() {
-            SwapPair.totalSupply = SwapPair.totalSupply - self.balance
+            SwapPair1.totalSupply = SwapPair1.totalSupply - self.balance
         }
     }
 
@@ -123,14 +123,14 @@ pub contract SwapPair3: FungibleToken {
     }
 
     /// Mint lpTokens
-    access(self) fun mintLpToken(amount: UFix64): @SwapPair.Vault {
+    access(self) fun mintLpToken(amount: UFix64): @SwapPair1.Vault {
         self.totalSupply = self.totalSupply + amount
         emit TokensMinted(amount: amount)
         return <- create Vault(balance: amount)
     } 
 
     /// Burn lpTokens
-    access(self) fun burnLpToken(from: @SwapPair.Vault) {
+    access(self) fun burnLpToken(from: @SwapPair1.Vault) {
         let amount = from.balance
         destroy from
         emit TokensBurned(amount: amount)
@@ -236,7 +236,7 @@ pub contract SwapPair3: FungibleToken {
                     msg: "SwapPair: removed zero liquidity",
                     err: SwapError.ErrorCode.INVALID_PARAMETERS
                 )
-            lpTokenVault.isInstance(Type<@SwapPair.Vault>()):
+            lpTokenVault.isInstance(Type<@SwapPair1.Vault>()):
                 SwapError.ErrorEncode(
                     msg: "SwapPair: input vault type mismatch with lpTokenVault type",
                     err: SwapError.ErrorCode.MISMATCH_LPTOKEN_VAULT
@@ -269,7 +269,7 @@ pub contract SwapPair3: FungibleToken {
         let withdrawnToken1 <- self.token1Vault.withdraw(amount: token1Amount)
 
         /// Burn lpTokens
-        self.burnLpToken(from: <- (lpTokenVault as! @SwapPair.Vault))
+        self.burnLpToken(from: <- (lpTokenVault as! @SwapPair1.Vault))
 
         if feeOn {
             self.rootKLast = SwapConfig.ScaledUInt256ToUFix64(
@@ -443,7 +443,7 @@ pub contract SwapPair3: FungibleToken {
     ///
     access(self) fun _mintFee(reserve0: UFix64, reserve1: UFix64): Bool {
         let rootKLast = self.rootKLast
-        if SwapFactory.feeTo == nil {
+        if SwapFactory1.feeTo == nil {
             if rootKLast > 0.0 {
                 self.rootKLast = 0.0
             }
@@ -459,7 +459,7 @@ pub contract SwapPair3: FungibleToken {
                 let liquidity = numerator / denominator
                 if liquidity > 0.0 {
                     let lpTokenVault <-self.mintLpToken(amount: liquidity)
-                    let lpTokenCollectionCap = getAccount(SwapFactory.feeTo!).getCapability<&{SwapInterfaces.LpTokenCollectionPublic}>(SwapConfig.LpTokenCollectionPublicPath)
+                    let lpTokenCollectionCap = getAccount(SwapFactory1.feeTo!).getCapability<&{SwapInterfaces.LpTokenCollectionPublic}>(SwapConfig.LpTokenCollectionPublicPath)
                     assert(lpTokenCollectionCap.check(), message:
                         SwapError.ErrorEncode(
                             msg: "SwapPair: Cannot borrow reference to LpTokenCollection resource in feeTo account",
@@ -477,57 +477,57 @@ pub contract SwapPair3: FungibleToken {
     ///
     pub resource PairPublic: SwapInterfaces.PairPublic {
         pub fun swap(vaultIn: @FungibleToken.Vault, exactAmountOut: UFix64?): @FungibleToken.Vault {
-            return <- SwapPair.swap(vaultIn: <-vaultIn, exactAmountOut: exactAmountOut)
+            return <- SwapPair1.swap(vaultIn: <-vaultIn, exactAmountOut: exactAmountOut)
         }
 
         pub fun flashLoan(flashLoanReceiver: Address, tokenKey:String, amount:UFix64) {
-            return SwapPair.flashLoan(flashLoanReceiver:flashLoanReceiver, tokenKey:tokenKey, amount:amount)
+            return SwapPair1.flashLoan(flashLoanReceiver:flashLoanReceiver, tokenKey:tokenKey, amount:amount)
         }
 
         pub fun removeLiquidity(lpTokenVault: @FungibleToken.Vault) : @[FungibleToken.Vault] {
-            return <- SwapPair.removeLiquidity(lpTokenVault: <- lpTokenVault)
+            return <- SwapPair1.removeLiquidity(lpTokenVault: <- lpTokenVault)
         }
 
         pub fun addLiquidity(tokenAVault: @FungibleToken.Vault, tokenBVault: @FungibleToken.Vault): @FungibleToken.Vault {
-            return <- SwapPair.addLiquidity(tokenAVault: <- tokenAVault, tokenBVault: <- tokenBVault)
+            return <- SwapPair1.addLiquidity(tokenAVault: <- tokenAVault, tokenBVault: <- tokenBVault)
         }
 
         pub fun getAmountIn(amountOut: UFix64, tokenOutKey: String): UFix64 {
-            if tokenOutKey == SwapPair.token1Key {
-                return SwapConfig.getAmountIn(amountOut: amountOut, reserveIn: SwapPair.token0Vault.balance, reserveOut: SwapPair.token1Vault.balance)
+            if tokenOutKey == SwapPair1.token1Key {
+                return SwapConfig.getAmountIn(amountOut: amountOut, reserveIn: SwapPair1.token0Vault.balance, reserveOut: SwapPair1.token1Vault.balance)
             } else {
-                return SwapConfig.getAmountIn(amountOut: amountOut, reserveIn: SwapPair.token1Vault.balance, reserveOut: SwapPair.token0Vault.balance)
+                return SwapConfig.getAmountIn(amountOut: amountOut, reserveIn: SwapPair1.token1Vault.balance, reserveOut: SwapPair1.token0Vault.balance)
             }
         }
         pub fun getAmountOut(amountIn: UFix64, tokenInKey: String): UFix64 {
-            if tokenInKey == SwapPair.token0Key {
-                return SwapConfig.getAmountOut(amountIn: amountIn, reserveIn: SwapPair.token0Vault.balance, reserveOut: SwapPair.token1Vault.balance)
+            if tokenInKey == SwapPair1.token0Key {
+                return SwapConfig.getAmountOut(amountIn: amountIn, reserveIn: SwapPair1.token0Vault.balance, reserveOut: SwapPair1.token1Vault.balance)
             } else {
-                return SwapConfig.getAmountOut(amountIn: amountIn, reserveIn: SwapPair.token1Vault.balance, reserveOut: SwapPair.token0Vault.balance)
+                return SwapConfig.getAmountOut(amountIn: amountIn, reserveIn: SwapPair1.token1Vault.balance, reserveOut: SwapPair1.token0Vault.balance)
             }
         }
         pub fun getPrice0CumulativeLastScaled(): UInt256 {
-            return SwapPair.price0CumulativeLastScaled
+            return SwapPair1.price0CumulativeLastScaled
         }
         pub fun getPrice1CumulativeLastScaled(): UInt256 {
-            return SwapPair.price1CumulativeLastScaled
+            return SwapPair1.price1CumulativeLastScaled
         }
         pub fun getBlockTimestampLast(): UFix64 {
-            return SwapPair.blockTimestampLast
+            return SwapPair1.blockTimestampLast
         }
 
         pub fun getPairInfo(): [AnyStruct] {
             return [
-                SwapPair.token0Key,
-                SwapPair.token1Key,
-                SwapPair.token0Vault.balance,
-                SwapPair.token1Vault.balance,
-                SwapPair.account.address,
-                SwapPair.totalSupply         
+                SwapPair1.token0Key,
+                SwapPair1.token1Key,
+                SwapPair1.token0Vault.balance,
+                SwapPair1.token1Vault.balance,
+                SwapPair1.account.address,
+                SwapPair1.totalSupply         
             ]
         }
         pub fun getLpTokenVaultType(): Type {
-            return Type<@SwapPair.Vault>()
+            return Type<@SwapPair1.Vault>()
         }
     }
 

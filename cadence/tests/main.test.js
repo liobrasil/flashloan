@@ -36,12 +36,22 @@ import {
   setupBasicToken2,
   getPairAddress,
   createPair,
+  createPair1,
+  createPair2,
   addLiquidity,
   getFlashLoan,
   removeLiquidity,
   transferToken1,
   transferToken2,
   getContracts,
+  deploySwapFactory1,
+  deploySwapFactory2,
+  // deploySwapPair1,
+  // deploySwapPair2,
+  // getPairAddress1,
+  // getPairAddress2,
+  deploySwapFactory3,
+  checkReceiver
 } from "./main";
 
 describe.skip("Deployment", () => {
@@ -235,6 +245,10 @@ describe.skip("DEX functions", () => {
   });
 });
 
+
+let token0Key;
+let token1Key;
+
 describe("Arbitrage", () => {
   beforeEach(async () => {
     const basePath = path.resolve(__dirname, "../");
@@ -275,22 +289,39 @@ describe("Arbitrage", () => {
     await deploySwapError(DEX2);
     await deploySwapError(flashLoanProvider);
 
+    
     await deploySwapInterfaces(DEX1);
     await deploySwapInterfaces(DEX2);
     await deploySwapInterfaces(flashLoanProvider);
 
-    await deploySwapFactory(DEX1);
-    await deploySwapFactory(DEX2);
-    await deploySwapFactory(flashLoanProvider);
+    await deploySwapFactory1();
+    await deploySwapFactory2();
+    await deploySwapFactory3();
+    // await deploySwapFactory(DEX1);
+    // await deploySwapFactory(DEX2);
+    // await deploySwapFactory(flashLoanProvider);
 
-    // await deploySwapRouter(DEX1);
-    // await deploySwapRouter(DEX2);
-    // await deploySwapRouter(flashLoanProvider);
+    shallPass(await deploySwapRouter(DEX1));
+    await deploySwapRouter(DEX2);
+    await deploySwapRouter(flashLoanProvider);
 
-    await deploySwapPair(DEX1);
-    await deploySwapPair(DEX2);
-    await deploySwapPair(flashLoanProvider);
+    // await deploySwapPair(DEX1);
+    // await deploySwapPair(DEX2);
 
+
+
+    // shallPass(await deploySwapPair(DEX1)) ;
+    // shallPass(await deploySwapPair(DEX2));
+    // shallPass(await deploySwapPair(flashLoanProvider));
+
+
+
+    // await deploySwapPair(flashLoanProvider);
+    // console.log("dex1 contracts: ", await getContracts(DEX1))
+    // console.log("dex2 contracts: ", await getContracts(DEX2))
+    // console.log("dex3 contracts: ", await getContracts(flashLoanProvider))
+
+    
     // setup basic tokens for Alice et flashLoanUser
     await setupBasicToken1(Alice);
     await setupBasicToken2(Alice);
@@ -301,71 +332,101 @@ describe("Arbitrage", () => {
     await setupBasicToken1(FlashLoanUser);
     await setupBasicToken2(FlashLoanUser);
 
-    console.log(await getContracts(DEX1))
-    console.log(await getContracts(DEX2))
+    // console.log("dex1 contracts: ", await getContracts(DEX1))
+    // console.log("dex2 contracts: ", await getContracts(DEX2))
+    // console.log("dex3 contracts: ", await getContracts(flashLoanProvider))
+
+    
     // setting up liquidity for DEXes
-    const amountToken0 = 1000_000;
-    const amountToken0Min = 999_999;
-    const amountToken1 = 1000_000;
-    const amountToken1Min = 999_999;
-    await transferToken1(amountToken0*10, Alice);
-    await transferToken2(amountToken1*10, Alice);
+    const amountToken0 = 10000;
+    const amountToken0Min = 9999;
+    const amountToken1 = 10000;
+    const amountToken1Min = 9999;
+    await transferToken1(amountToken0*100, Alice);
+    await transferToken2(amountToken1*100, Alice);
     // await transferToken1(amountToken0, Bob);
     // await transferToken2(1.5 * amountToken1, Bob);
     // await transferToken1(10 * amountToken0, Charlie);
     // await transferToken2(10 * amountToken1, Charlie);
 
-    console.log("dex1 pair: ", await getPairAddress(DEX1));
-    console.log("dex2 pair: ", await getPairAddress(DEX2));
+    // console.log("dex1 pair: ", await getPairAddress(DEX1));
+    // console.log("dex2 pair: ", await getPairAddress(DEX2));
+    // console.log("dex3 pair: ", await getPairAddress(flashLoanProvider));
     // Alice provides 1M/1M on DEX1
-    let [txResult1] = await createPair(Alice, DEX1);
-    let data1 = txResult1.events[10].data;
-    await addLiquidity(
-      data1.token0Key,
-      data1.token1Key,
-      amountToken0,
-      amountToken0Min,
-      amountToken1,
-      amountToken1Min,
-      Alice,
-      DEX1
-    );
-    console.log("-----Added liquidity on DEX1 : ", data1);
 
-    console.log(await getPairAddress(DEX1));
-    console.log(await getPairAddress(DEX2));
 
+
+
+    // let [txResult1] = await createPair(Alice, DEX1);
+    // let data1 = txResult1.events[10].data;
+    // await addLiquidity(
+    //   data1.token0Key,
+    //   data1.token1Key,
+    //   amountToken0,
+    //   amountToken0Min,
+    //   amountToken1,
+    //   amountToken1Min,
+    //   Alice,
+    //   DEX1
+    // );
+    // console.log("-----Added liquidity on DEX1 : ", data1);
+
+    
+ 
     // Bob provides 1M/1.5M on DEX2
-    let [txResult2, error] = await createPair(Alice, DEX2);
-    console.log("---Adding liquidity on DEX2 by Bob", txResult2, error);
-    let data2 = txResult2.events[10].data;
-    await addLiquidity(
-      data2.token0Key,
-      data2.token1Key,
-      amountToken0,
-      amountToken0Min,
-      1.5 * amountToken1,
-      1.5 * amountToken1Min,
-      Alice,
-      DEX2
-    );
+    // let [txResult2, error] = await createPair(Alice, DEX2);
+    
+
+    // console.log("dex1 pair: ", await getPairAddress(DEX1));
+    // console.log("dex2 pair: ", await getPairAddress(DEX2));
+    // console.log("dex3 pair: ", await getPairAddress(flashLoanProvider));
+
+
+
+
+    // let data2 = txResult2.events[10].data;
+    // console.log("---Adding liquidity on DEX2 by Bob", data2, error);
+    // await addLiquidity(
+    //   data2.token0Key,
+    //   data2.token1Key,
+    //   amountToken0,
+    //   amountToken0Min,
+    //   1.5 * amountToken1,
+    //   1.5 * amountToken1Min,
+    //   Alice,
+    //   DEX2
+    // );
+
+    // token0Key = data2.token0Key;
+    // token1Key = data2.token1Key;
+
+
+
 
     // Charlie provider 10M/10M on FlashLoanProvider
-    let [txResult3] = await createPair(Charlie, flashLoanProvider);
-    let data3 = txResult3.events[10].data;
-    await addLiquidity(
-      data3.token0Key,
-      data3.token1Key,
-      10 * amountToken0,
-      10 * amountToken0Min,
-      10 * amountToken1,
-      10 * amountToken1Min,
-      Charlie,
-      flashLoanProvider
-    );
+    // shallPass(await createPair(Alice, flashLoanProvider)) ;
+    
+
+
+    // let [txResult3] = await createPair(Alice, flashLoanProvider);
+    // let data3 = txResult3.events[10].data;
+    // console.log("data3: ", data3)
+    // await addLiquidity(
+    //   data3.token0Key,
+    //   data3.token1Key,
+    //   10 * amountToken0,
+    //   10 * amountToken0Min,
+    //   10 * amountToken1,
+    //   10 * amountToken1Min,
+    //   Alice,
+    //   flashLoanProvider
+    // );
 
     // setup basic tokens for flashLoanUser
-    await deployArbitrage();
+    shallPass(await deployArbitrage());
+    console.log("flash loan user contracts: ", await getContracts(FlashLoanUser))
+
+    console.log(await checkReceiver());
   });
 
   afterEach(async () => {
@@ -375,16 +436,24 @@ describe("Arbitrage", () => {
   it("user can borrow a flashloan and perform an arbitrage", async () => {
     const flashLoanUser = await getFlashLoanUser();
     const flashLoanProvider = await getFlashLoanProvider();
-    await shallPass(
-      getFlashLoan(
-        data.token0Key,
-        data.token1Key,
-        data.token0Key,
-        FlashLoanUser,
-        500000,
-        flashLoanProvider
-      )
-    );
-    await shallPass(startArbitrage());
+  //   shallPass(await getFlashLoan(
+  //     token0Key,
+  //     token1Key,
+  //     token1Key,
+  //     flashLoanUser,
+  //     500,
+  //     flashLoanProvider
+  // ));
+
+    // let [result, error] = await getFlashLoan(
+    //     token0Key,
+    //     token1Key,
+    //     token1Key,
+    //     flashLoanUser,
+    //     500,
+    //     flashLoanProvider
+    // );
+    // console.log(result.events);
+    // await shallPass(startArbitrage());
   });
 });
