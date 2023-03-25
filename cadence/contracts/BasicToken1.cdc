@@ -1,4 +1,4 @@
-import FungibleToken from "./FungibleToken.cdc"
+import FungibleToken from "FungibleToken"
 
 // Token contract of Starly Token (STARLY)
 pub contract BasicToken1: FungibleToken {
