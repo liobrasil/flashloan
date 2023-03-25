@@ -119,6 +119,15 @@ export const deployArbitrage = async () => {
   return sendTransaction({ code, signers });
 };
 
+export const setupArbitrageAccount = async () => {
+  console.log("deploying arbitrage: ");
+  let dex = await getFirstDex();
+  let account = await getFlashLoanUser();
+  let code = await readCadence("../../transactions/flashLoan/setupReceiver.cdc", dex);
+  const signers = [account];
+  return sendTransaction({ code, signers });
+};
+
 export const getPairAddress = async (account) => {
   const scriptCode = await readCadence("../../scripts/factory/getPairAddress.cdc", account);
   // console.log("get pair address script: ", scriptCode)
@@ -133,6 +142,11 @@ export const checkReceiver = async () => {
   return response;
 };
 
+// export const setupArbitrageAccount = async () => {
+//   const name = "flashLoan/setupReceiver";
+//   const signers = [await getFlashLoanUser()];
+//   return sendTransaction({ name, signers });
+// };
 // export const getPairAddress1 = async (account) => {
 //   const scriptCode = await readCadence("../../scripts/factory/getPairAddress1.cdc", account);
 //   console.log("get pair address script: ", scriptCode)

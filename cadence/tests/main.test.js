@@ -46,6 +46,7 @@ import {
   getContracts,
   deploySwapFactory1,
   deploySwapFactory2,
+  setupArbitrageAccount,
   // deploySwapPair1,
   // deploySwapPair2,
   // getPairAddress1,
@@ -408,25 +409,26 @@ describe("Arbitrage", () => {
     
 
 
-    // let [txResult3] = await createPair(Alice, flashLoanProvider);
-    // let data3 = txResult3.events[10].data;
-    // console.log("data3: ", data3)
-    // await addLiquidity(
-    //   data3.token0Key,
-    //   data3.token1Key,
-    //   10 * amountToken0,
-    //   10 * amountToken0Min,
-    //   10 * amountToken1,
-    //   10 * amountToken1Min,
-    //   Alice,
-    //   flashLoanProvider
-    // );
+    let [txResult3] = await createPair(Alice, flashLoanProvider);
+    let data3 = txResult3.events[10].data;
+    console.log("data3: ", data3)
+    await addLiquidity(
+      data3.token0Key,
+      data3.token1Key,
+      10 * amountToken0,
+      10 * amountToken0Min,
+      10 * amountToken1,
+      10 * amountToken1Min,
+      Alice,
+      flashLoanProvider
+    );
 
     // setup basic tokens for flashLoanUser
     shallPass(await deployArbitrage());
     console.log("flash loan user contracts: ", await getContracts(FlashLoanUser))
 
-    console.log(await checkReceiver());
+    // shallPass(await setupArbitrageAccount()) ;
+    // console.log(await checkReceiver());
   });
 
   afterEach(async () => {
@@ -436,14 +438,14 @@ describe("Arbitrage", () => {
   it("user can borrow a flashloan and perform an arbitrage", async () => {
     const flashLoanUser = await getFlashLoanUser();
     const flashLoanProvider = await getFlashLoanProvider();
-  //   shallPass(await getFlashLoan(
-  //     token0Key,
-  //     token1Key,
-  //     token1Key,
-  //     flashLoanUser,
-  //     500,
-  //     flashLoanProvider
-  // ));
+    shallPass(await getFlashLoan(
+      token0Key,
+      token1Key,
+      token1Key,
+      flashLoanUser,
+      500,
+      flashLoanProvider
+  ));
 
     // let [result, error] = await getFlashLoan(
     //     token0Key,

@@ -37,6 +37,7 @@ export const readCadence = async (filePath, account, skip = false) => {
   let DEX1 = await getFirstDex();
   let DEX2 = await getSecondDex();
   let FlashLoanProvider = await getFlashLoanProvider();
+  let flashLoanUser = await getFlashLoanUser();
 
   let fileObject = fs
     .readFileSync(path.join(__dirname, filePath), "utf8")
@@ -86,6 +87,7 @@ export const readCadence = async (filePath, account, skip = false) => {
     .replace('"SwapRouter1"', DEX1)
     .replace('"SwapRouter2"', DEX2)
     .replace('"SwapRouter3"', FlashLoanProvider)
+    .replace('"ArbitrageAddress"', flashLoanUser)
     .replace('"SwapPair"', DEX)
     .replace('"BasicToken1"', await getTokensDeployer())
     .replace('"BasicToken2"', await getTokensDeployer());
