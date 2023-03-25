@@ -1,8 +1,10 @@
 import { deployContractByName, sendTransaction, executeScript } from "@onflow/flow-js-testing";
 import {
-  getFirstDex,
   getFlashLoanUser,
+  getFirstDex, 
+  getSecondDex,
   getTokensDeployer,
+  getMockLendingProtocol,
   toUFix64,
   readCadence,
 } from "./src/common";
@@ -28,7 +30,9 @@ export const deploySwapFactory = async (account) => {
 export const deploySwapRouter = async (account) => {
   return deployContractByName({ to: account, name: "SwapRouter" });
 };
-
+export const deployLiquidation = async (account) => {
+  return deployContractByName({ to: account, name: "Liquidation" });
+};
 export const deploySwapPair = async (account) => {
   const contractCode = await readCadence("../../contracts/SwapPair.cdc", account);
   const contractCodeEncoded = Buffer.from(contractCode, "utf8").toString("hex");
@@ -64,6 +68,14 @@ export const deployBasicToken2 = async () => {
   return deployContractByName({ to: tokensDeployer, name: "BasicToken2" });
 };
 
+export const deployMockLendingProtocol = async () => {
+  const MockLendingProtocol = await getMockLendingProtocol();
+  return deployContractByName({
+    to: MockLendingProtocol,
+    name: "MockLendingProtocol",
+  });
+};
+
 export const deployArbitrage = async (account) => {
   let flashLoanUser = account;
   if (!account) {
@@ -84,11 +96,7 @@ export const setupBasicToken2 = async (account) => {
   return sendTransaction({ name, signers });
 };
 
-export const createPair = async (account, dexAccount) => {
-  let dex = dexAccount;
-  if (!dex) {
-    dex = await getFirstDex();
-  }
+export const createPair = async (account, dex) => {
   const code = await readCadence(
     "../../transactions/factory/createPair.cdc",
     dex
@@ -165,25 +173,21 @@ export const getFlashLoan = async (
   const args = [token0Key, token1Key, flashLoanTokenKey, account, amount];
   return sendTransaction({ code, args, signers });
 };
-
-// NEED TO UPDATE THIS FUNCTION to include DEX as parameter
-export const removeLiquidity = async (
+export const liquidatePosition = async (
   token0Key,
   token1Key,
-  lpTokenAmount,
-  account
+  flashLoanTokenKey,
+  account,
+  amount,
+  provider
 ) => {
-  const name = "pair/removeLiquidity";
+  const code = await readCadence(
+    "../../transactions/flashLoan/liquidatePosition.cdc",
+    provider
+  );
   const signers = [account];
-  const token0VaultPath = "/storage/BasicToken1Vault";
-  const token1VaultPath = "/storage/BasicToken2Vault";
 
-  const args = [
-    lpTokenAmount,
-    token0Key,
-    token1Key,
-    token0VaultPath,
-    token1VaultPath,
-  ];
-  return sendTransaction({ name, args, signers });
+  console.log(account?.address, account);
+  const args = [token0Key, token1Key, flashLoanTokenKey, account, amount];
+  return sendTransaction({ code, args, signers });
 };
