@@ -345,7 +345,7 @@ pub contract SwapPair: FungibleToken {
         pre {
             tokenKey==self.token0Key || tokenKey==self.token1Key:
                 SwapError.ErrorEncode(
-                    msg: "SwapPair: not enough reserve for flash loan",
+                    msg: "SwapPair: invalid token for flash loan",
                     err: SwapError.ErrorCode.INVALID_PARAMETERS
                 )
             self.lock == false: SwapError.ErrorEncode(msg: "SwapPair: Reentrant", err: SwapError.ErrorCode.REENTRANT)
@@ -353,9 +353,11 @@ pub contract SwapPair: FungibleToken {
         post {
             self.lock == false: "SwapPair: unlock"
         }
+        // we need to lock during flash loan to avoid any swap via reentrancy
         self.lock = true
         var flashLoanVault:@FungibleToken.Vault? <- nil;
 
+        // Extract the required amount in flashLoanVault
         if (tokenKey==self.token1Key) {
             assert(amount<= self.token1Vault.balance!, message:
                 SwapError.ErrorEncode(
@@ -377,17 +379,18 @@ pub contract SwapPair: FungibleToken {
             flashLoanVault <-! self.token0Vault.withdraw(amount: amount)
         }
 
+        // Call the resource's onFlashLoan function to provide flash Laon
         let publicAccount = getAccount(flashLoanReceiver);
         let flashLoanReceiverResource  = publicAccount.getCapability(/public/flashLoanReceiver).borrow<&{SwapInterfaces.FlashLoanReceiver}>();
 
         let fees = self.getFlashLoanFees(amount:amount);
         // perform flash loan
-        
         let returnedVault <- flashLoanReceiverResource!.onFlashLoan(flashLoanVault:<-flashLoanVault!, tokenKey:tokenKey, fees:fees);
-
+        
+        // check if returned vault is of correct type and amount
         assert(returnedVault.isInstance(self.token0VaultType) || returnedVault.isInstance(self.token1VaultType), message:
             SwapError.ErrorEncode(
-                msg: "SwapPair: INSUFFICIENT_AMOUNT",
+                msg: "SwapPair: Wrong token vault",
                 err: SwapError.ErrorCode.INVALID_PARAMETERS
             )
         )
@@ -399,6 +402,7 @@ pub contract SwapPair: FungibleToken {
             )
         )
 
+        // If everything succeed, emit an event with details
         emit FlashLoanCompleted(
             flashLoanReceiver:flashLoanReceiver, 
             tokenKey:tokenKey, 

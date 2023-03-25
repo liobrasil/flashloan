@@ -1,103 +1,169 @@
-### 👋 Welcome Flow Developer!
-Welcome to your new Flow project. We only provided you with bare minimum to get started, which is the standard Cadence folder structure and a flow.json configuration with standard contracts defined.
+# 👋 Welcome to Flow Flash Loans!
 
-### 🔨 Getting started
-Getting started can feel overwhelming, but we are here for you. Depending on how accustomed you are to Flow here's a list of resources you might find useful:
-- **[Cadence documentation](https://developers.flow.com/cadence/language)**: here you will find language reference for Cadence, which will be the language in which you develop your smart contracts,
-- **[Visual Studio Code](https://code.visualstudio.com/?wt.mc_id=DX_841432)** and **[Cadence extension](https://marketplace.visualstudio.com/items?itemName=onflow.cadence)**: we suggest using Visual Studio Code IDE for writing Cadence with the Cadence extension installed, that will give you nice syntax highlitning and additional smart features,
-- **[SDKs](https://developers.flow.com/tools#sdks)**: here you will find a list of SDKs you can use to ease the interaction with Flow network (sending transactions, fetching accounts etc),
-- **[Tools](https://developers.flow.com/tools#development-tools)**: development tools you can use to make your development easier, [Flowser](https://docs.flowser.dev/) can be super handy to see what's going on the blockchain while you develop
+Flash Loans provide a very easy way to gain access to capital for a single transaction. This extra access to capital can be used for arbitrage opportunities, liqudations, etc. Currently, there is no easy way to get Flash Loans in Flow. We have come up with an interface and specification that can be used by DEXs already present on Flow to provide secure Flash Loans to their users, which will end up with them earning extra fees above the swap fees. 
 
+We also present an example contract that can be used by developers in Flow ecosystem to easily get Flash Loans for their applications. 
 
-### 📦 Project Structure
-Your project comes with some standard folders which have a special purpose:
-- `/cadence` inside here is where your Cadence smart contracts code lives
-- `flow.json` configuration file for your project, you can think of it as package.json, but you don't need to worry, flow dev command will configure it for you
+For this hackathon, we have demonstrated how **IncrementFi** can extend their `SwapPair.cdc` contracts to support Flash Loans. 
 
-Inside `cadence` folder you will find:
-- `/contracts` location for Cadence contracts go in this folder
-- `/scripts` location for Cadence scripts goes here
-- `/transactions` location for Cadence transactions goes in this folder
-- `/tests` all the integration tests for your dapp and Cadence tests go into this folder
+This approach can easily be extended to provide flash Swaps as well.
 
+## 🔨 Getting started
 
-### 👨‍💻 Start Developing
-After creating this project using the flow setup command you should then start the emulator by running:
-```
-> flow emulator --contracts
-```
-_we use `--contracts` flag to include more already deployed contract we can then easily import in our project._
+### SwapInterface.cdc
+First, we need to specify an interface for receiving Flash Loans. We have defined it in the `SwapInterfaces.cdc` contract - 
+```cadence
+pub resource interface FlashLoanReceiver {
+        pub fun onFlashLoan(flashLoanVault: @FungibleToken.Vault, tokenKey:String, fees:UFix64): @FungibleToken.Vault
+    }
 
-and then start the development command by running:
-```shell
-> flow dev
-```
-After the command is started it will automatically watch any changes you make to Cadence files and make sure to continiously sync those changes on the emulator network. If you make any mistakes it will report the errors as well. Read more [about the command here](https://developers.flow.com/tools/flow-cli/super-commands)
-
-**Importing Contracts**
-
-When you want to import the contracts you've just created you can simply do so by writing the import statement:
-```
-import "Foo"
-```
-We will automatically find your project contract named `Foo` and handle the importing for you. 
-
-**Deploying to specific accounts**
-
-By default all contracts are deployed to a default account. If you want to seperate contracts to different accounts you can easily do so by creating a folder inside the contracts folder and we will create the account for you which will have the same name as the folder you just created. All the contracts inside that folder will be deployed automatically to the newly created account.
-
-Example deploying to charlie account:
-
-_folder structure_
-```
-/contracts
-    Bar.cdc
-    /charlie
-        Foo.cdc
 ```
 
-You can then import the `Foo` contract in `Bar` contract the same way as any other contract:
+Here, `flashLoanVault` is the vault received from a DEX.
+
+ `tokenKey` represents the token which was requested to borrow. 
+
+ `fees` is the amount of `tokenKey` token that the DEX expects as fees when the vault is returned. In the same transaction, the flash loan user should return a vault of token `tokenKey` with an amount equal to `flashLoanVault.balance + fees`. 
+
+ If the user is not able to return the principal amount + fees in this function call, the transaction will revert and all state changes will be discarded. This ensures that the funds are received by the DEX, and there is no reason to worry about the funds lent out for flash loans. 
+
+
+### SwapPair.cdc
+
+This is the main contract with the specifications for giving out Flash Loans. We need 2 function for implementing this - 
+```cadence
+pub fun getFlashLoanFees(amount:UFix64) :UFix64 {
+        return amount *self.flashLoanFeesPercentage/10000.0;
+    }
 ```
-import "Foo"
+This function specifies how much fees is expected from the user for this amount of flash loan. It can be generalized to even return different fees for different tokens. 
+
+Here is the main `flashLoan` function - 
+```
+pub fun flashLoan(flashLoanReceiver:Address, tokenKey:String, amount:UFix64) {
+
+        pre {
+            tokenKey==self.token0Key || tokenKey==self.token1Key:
+                SwapError.ErrorEncode(
+                    msg: "SwapPair: invalid token for flash loan",
+                    err: SwapError.ErrorCode.INVALID_PARAMETERS
+                )
+            self.lock == false: SwapError.ErrorEncode(msg: "SwapPair: Reentrant", err: SwapError.ErrorCode.REENTRANT)
+        }
+        post {
+            self.lock == false: "SwapPair: unlock"
+        }
+        // we need to lock during flash loan to avoid any swap via reentrancy
+        self.lock = true
+        var flashLoanVault:@FungibleToken.Vault? <- nil;
+
+        // Extract the required amount in flashLoanVault
+        if (tokenKey==self.token1Key) {
+            assert(amount<= self.token1Vault.balance!, message:
+                SwapError.ErrorEncode(
+                    msg: "SwapPair: INSUFFICIENT_AMOUNT",
+                    err: SwapError.ErrorCode.INVALID_PARAMETERS
+                )
+            )
+
+            flashLoanVault <-! self.token1Vault.withdraw(amount: amount)
+        }
+
+        if (tokenKey==self.token0Key) {
+            assert(amount<= self.token0Vault.balance!, message:
+                SwapError.ErrorEncode(
+                    msg: "SwapPair: INSUFFICIENT_AMOUNT",
+                    err: SwapError.ErrorCode.INVALID_PARAMETERS
+                )
+            )
+            flashLoanVault <-! self.token0Vault.withdraw(amount: amount)
+        }
+
+        // Call the resource's onFlashLoan function to provide flash Laon
+        let publicAccount = getAccount(flashLoanReceiver);
+        let flashLoanReceiverResource  = publicAccount.getCapability(/public/flashLoanReceiver).borrow<&{SwapInterfaces.FlashLoanReceiver}>();
+
+        let fees = self.getFlashLoanFees(amount:amount);
+        // perform flash loan
+        let returnedVault <- flashLoanReceiverResource!.onFlashLoan(flashLoanVault:<-flashLoanVault!, tokenKey:tokenKey, fees:fees);
+        
+        // check if returned vault is of correct type and amount
+        assert(returnedVault.isInstance(self.token0VaultType) || returnedVault.isInstance(self.token1VaultType), message:
+            SwapError.ErrorEncode(
+                msg: "SwapPair: Wrong token vault",
+                err: SwapError.ErrorCode.INVALID_PARAMETERS
+            )
+        )
+
+        assert(returnedVault.balance>= amount+fees, message:
+            SwapError.ErrorEncode(
+                msg: "SwapPair: INSUFFICIENT_AMOUNT",
+                err: SwapError.ErrorCode.INVALID_PARAMETERS
+            )
+        )
+
+        // If everything succeed, emit an event with details
+        emit FlashLoanCompleted(
+            flashLoanReceiver:flashLoanReceiver, 
+            tokenKey:tokenKey, 
+            sentAmount:amount, 
+            receivedAmount:returnedVault.balance
+        )
+
+        if (returnedVault.isInstance(self.token0VaultType)) {
+            self.token0Vault.deposit(from:<-returnedVault!);
+        }
+        else if (returnedVault.isInstance(self.token1VaultType)) {
+            self.token1Vault.deposit(from:<-returnedVault!);
+        } else {
+            destroy returnedVault;
+            panic("Not correct type vault returned")
+        }
+
+
+        self.lock = false
+
+    }
 ```
 
-**Included Imports**
+We are performing necessary checks for balances and vault types. Also, we need to enable lock before providing the flash loan to avoid any swaps as reentrancy. 
 
-You can already import certain common contracts we included for you, just make sure you started your emulator with the `--contracts` flag so those contracts are really deployed. The list of contracts you can import out of the box is:
-- NonFungibleToken `import "NonFungibleToken"`
-- FlowToken `import "FlowToken"`
-- FungibleToken `import "FungibleToken"`
-- FUSD `import "FUSD"`
-- MetadataViews `import "MetadataViews"`
-- ExampleNFT `import "ExampleNFT"`
-- NFTStorefrontV2 `import "NFTStorefrontV2"`
-- NFTStorefront `import "NFTStorefront"`
+### Arbitrage Contract
 
+the last piece is the Arbitrage Contract, which specifies the interface for getting flash loan - 
+```cadence
+import FungibleToken from "FungibleToken"
+import SwapInterfaces from "SwapInterfaces"
 
-### Further Reading
+pub contract Arbitrage {
 
-- Cadence Language Reference https://developers.flow.com/cadence/language
-- Flow Smart Contract Project Development Standards https://developers.flow.com/cadence/style-guide/project-development-tips
-- Cadence anti-patterns https://developers.flow.com/cadence/anti-patterns
+    pub event ReceivedFlashLoan(tokenKey:String, amount:UFix64);
+    
+    pub resource FlashLoanReceiver:SwapInterfaces.FlashLoanReceiver {
+        pub fun onFlashLoan(flashLoanVault:@FungibleToken.Vault, tokenKey:String, fees:UFix64):@FungibleToken.Vault {
 
-
+            emit ReceivedFlashLoan(tokenKey:tokenKey, amount:flashLoanVault.balance);
+            // Add arbitrage, liquidation, collateral swap logic here
 
 
-DEX1 
-Alice - > provides liquidity - 100000 T1, 100000 T2 
+            // End of user's logic. send the final vault, with balance equal to inital vault balance plus fees. Rest can be stored
+            // in user's account as profit
+            return <-flashLoanVault
+        }
+    }
 
-DEX2 
-Bob -> provide liquidity - 100000 T1, 150000 T2
+    init() {
+        destroy <-self.account.load<@AnyResource>(from: /storage/flashLoanReceiver);
+        self.account.save(<-create FlashLoanReceiver(), to: /storage/flashLoanReceiver);
+        self.account.link<&{SwapInterfaces.FlashLoanReceiver}>(/public/flashLoanReceiver, target: /storage/flashLoanReceiver);              
+
+    }
+} 
+```
+
+In this way, DEXs can easily provide flash loans, can users can take advantage of this new functionality to build further amazing composable DEFI products! 
 
 
-DEX3 
-Charlie -> liquidity -  100000 T1, 100000 T2
+***Note 1***: As this is more of a dev tool than a end user's product, we have not created a frontend. Instead, we have written tests to show that our implementation works. Go to cadence/tests/, run `npm i` and then `npm test` to check out the tests. 
 
-
-
-User -> get a loan of 5000 T2 from Dex3 
-he sells 5000 T2 on DEX1 for 5000 T1 
-
-sell 5000 T1 for 7500 T2 on DEX2 
-
-return 5000 + 5(fees) T2 to DEX3, and get 2500 T2 as profit and store in user's vault
+***Note 2***: We wanted to do this by just calling a function of a contract, but were not able to figure out how to call functions of a dynamic imported contract. Therefore we used public resource capability to achieve this. Having the ability to call a contract function will simplify the process. 

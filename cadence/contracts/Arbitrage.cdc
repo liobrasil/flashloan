@@ -15,7 +15,8 @@ pub contract Arbitrage {
 
 
 
-            // End of user's logic
+            // End of user's logic. send the final vault, with balance equal to inital vault balance plus fees. Rest can be stored
+            // in user's account as profit
             return <-flashLoanVault
         }
     }
