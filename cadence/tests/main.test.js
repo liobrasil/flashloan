@@ -101,7 +101,7 @@ describe("Arbitrage", () => {
       Alice,
       DEX1
     );
-    console.log("-----Added liquidity on DEX1 : ", data1);
+    console.log("-----Created pair --------: ", data1);
     token0Key = data1.token0Key;
     token1Key = data1.token1Key;
 
@@ -116,6 +116,8 @@ describe("Arbitrage", () => {
   it("user can borrow a flashloan and perform an arbitrage", async () => {
     const flashLoanUser = await getFlashLoanUser();
     const flashLoanProvider = await getFirstDex();
+
+    console.log("---Starting Flash Loan transaction-----")
     let [result] = await
       getFlashLoan(
         token0Key,
@@ -125,6 +127,7 @@ describe("Arbitrage", () => {
         500,
         flashLoanProvider
       );
+      console.log("----Events from Flash loan transaction ------")
       console.log(result.events)
     // await shallPass(startArbitrage());
   });

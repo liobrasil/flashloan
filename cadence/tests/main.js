@@ -93,7 +93,7 @@ export const createPair = async (account, dexAccount) => {
     "../../transactions/factory/createPair.cdc",
     dex
   );
-  console.log("dex: ", dex, "code: ", code);
+  // console.log("dex: ", dex, "code: ", code);
   const signers = [account];
   return sendTransaction({ code, signers });
 };
@@ -161,7 +161,7 @@ export const getFlashLoan = async (
   );
   const signers = [account];
 
-  console.log(account?.address, account);
+  // console.log(account?.address, account);
   const args = [token0Key, token1Key, flashLoanTokenKey, account, amount];
   return sendTransaction({ code, args, signers });
 };
