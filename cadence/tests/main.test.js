@@ -34,12 +34,14 @@ import {
   deployArbitrage,
   setupBasicToken1,
   setupBasicToken2,
+  getPairAddress,
   createPair,
   addLiquidity,
   getFlashLoan,
   removeLiquidity,
   transferToken1,
   transferToken2,
+  getContracts,
 } from "./main";
 
 describe.skip("Deployment", () => {
@@ -247,16 +249,20 @@ describe("Arbitrage", () => {
     const DEX2 = await getSecondDex();
     const flashLoanProvider = await getFlashLoanProvider();
     const Alice = await getAlice();
-    const Bob = await getBob();
-    const Charlie = await getCharlie();
+    // const Bob = await getBob();
+    // const Charlie = await getCharlie();
     const FlashLoanUser = await getFlashLoanUser();
+
+    console.log("DEX1: ", DEX1);
+    console.log("DEX2: ", DEX2);
+    console.log("flashLoanProvider: ", flashLoanProvider);
 
     await mintFlow(DEX1, "10.0");
     await mintFlow(DEX2, "10.0");
     await mintFlow(flashLoanProvider, "10.0");
     await mintFlow(Alice, "10.0");
-    await mintFlow(Bob, "10.0");
-    await mintFlow(Charlie, "10.0");
+    // await mintFlow(Bob, "10.0");
+    // await mintFlow(Charlie, "10.0");
     await mintFlow(FlashLoanUser, "10.0");
     await deployBasicToken1();
     await deployBasicToken2();
@@ -277,9 +283,9 @@ describe("Arbitrage", () => {
     await deploySwapFactory(DEX2);
     await deploySwapFactory(flashLoanProvider);
 
-    await deploySwapRouter(DEX1);
-    await deploySwapRouter(DEX2);
-    await deploySwapRouter(flashLoanProvider);
+    // await deploySwapRouter(DEX1);
+    // await deploySwapRouter(DEX2);
+    // await deploySwapRouter(flashLoanProvider);
 
     await deploySwapPair(DEX1);
     await deploySwapPair(DEX2);
@@ -288,25 +294,29 @@ describe("Arbitrage", () => {
     // setup basic tokens for Alice et flashLoanUser
     await setupBasicToken1(Alice);
     await setupBasicToken2(Alice);
-    await setupBasicToken1(Bob);
-    await setupBasicToken2(Bob);
-    await setupBasicToken1(Charlie);
-    await setupBasicToken2(Charlie);
+    // await setupBasicToken1(Bob);
+    // await setupBasicToken2(Bob);
+    // await setupBasicToken1(Charlie);
+    // await setupBasicToken2(Charlie);
     await setupBasicToken1(FlashLoanUser);
     await setupBasicToken2(FlashLoanUser);
 
+    console.log(await getContracts(DEX1))
+    console.log(await getContracts(DEX2))
     // setting up liquidity for DEXes
-    const amountToken0 = 1000000;
-    const amountToken0Min = 999999;
-    const amountToken1 = 1000000;
-    const amountToken1Min = 999999;
-    await transferToken1(amountToken0, Alice);
-    await transferToken2(amountToken1, Alice);
-    await transferToken1(amountToken0, Bob);
-    await transferToken2(1.5 * amountToken1, Bob);
-    await transferToken1(10 * amountToken0, Charlie);
-    await transferToken2(10 * amountToken1, Charlie);
+    const amountToken0 = 1000_000;
+    const amountToken0Min = 999_999;
+    const amountToken1 = 1000_000;
+    const amountToken1Min = 999_999;
+    await transferToken1(amountToken0*10, Alice);
+    await transferToken2(amountToken1*10, Alice);
+    // await transferToken1(amountToken0, Bob);
+    // await transferToken2(1.5 * amountToken1, Bob);
+    // await transferToken1(10 * amountToken0, Charlie);
+    // await transferToken2(10 * amountToken1, Charlie);
 
+    console.log("dex1 pair: ", await getPairAddress(DEX1));
+    console.log("dex2 pair: ", await getPairAddress(DEX2));
     // Alice provides 1M/1M on DEX1
     let [txResult1] = await createPair(Alice, DEX1);
     let data1 = txResult1.events[10].data;
@@ -322,9 +332,12 @@ describe("Arbitrage", () => {
     );
     console.log("-----Added liquidity on DEX1 : ", data1);
 
+    console.log(await getPairAddress(DEX1));
+    console.log(await getPairAddress(DEX2));
+
     // Bob provides 1M/1.5M on DEX2
-    let [txResult2, error] = await createPair(Bob, DEX2);
-    console.log("---Adding liquidity on DEX2 by Bob", txResult2);
+    let [txResult2, error] = await createPair(Alice, DEX2);
+    console.log("---Adding liquidity on DEX2 by Bob", txResult2, error);
     let data2 = txResult2.events[10].data;
     await addLiquidity(
       data2.token0Key,
@@ -333,7 +346,7 @@ describe("Arbitrage", () => {
       amountToken0Min,
       1.5 * amountToken1,
       1.5 * amountToken1Min,
-      Bob,
+      Alice,
       DEX2
     );
 

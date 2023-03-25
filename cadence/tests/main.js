@@ -1,4 +1,4 @@
-import { deployContractByName, sendTransaction } from "@onflow/flow-js-testing";
+import { deployContractByName, sendTransaction, executeScript } from "@onflow/flow-js-testing";
 import {
   getFirstDex,
   getFlashLoanUser,
@@ -7,19 +7,19 @@ import {
   readCadence,
 } from "./src/common";
 
-export const deploySwapConfig = async () => {
+export const deploySwapConfig = async (account) => {
   const DEX1 = await getFirstDex();
-  return deployContractByName({ to: DEX1, name: "SwapConfig" });
+  return deployContractByName({ to: account, name: "SwapConfig" });
 };
 
-export const deploySwapError = async () => {
+export const deploySwapError = async (account) => {
   const DEX1 = await getFirstDex();
-  return deployContractByName({ to: DEX1, name: "SwapError" });
+  return deployContractByName({ to: account, name: "SwapError" });
 };
 
-export const deploySwapInterfaces = async () => {
+export const deploySwapInterfaces = async (account) => {
   const DEX1 = await getFirstDex();
-  return deployContractByName({ to: DEX1, name: "SwapInterfaces" });
+  return deployContractByName({ to: account, name: "SwapInterfaces" });
 };
 
 export const deploySwapFactory = async (account) => {
@@ -30,14 +30,28 @@ export const deploySwapRouter = async (account) => {
 };
 
 export const deploySwapPair = async (account) => {
-  const contractCode = await readCadence("../../contracts/SwapPair.cdc");
+  const contractCode = await readCadence("../../contracts/SwapPair.cdc", account);
   const contractCodeEncoded = Buffer.from(contractCode, "utf8").toString("hex");
   const code = (
-    await readCadence("../../transactions/others/deploySwapPair.cdc")
+    await readCadence("../../transactions/others/deploySwapPair.cdc", account)
   ).replace("smartContractCode", contractCodeEncoded);
 
   const signers = [account];
   return sendTransaction({ code, signers });
+};
+
+export const getPairAddress = async (account) => {
+  const scriptCode = await readCadence("../../scripts/factory/getPairAddress.cdc", account);
+  console.log("get pair address script: ", scriptCode)
+  let response = await executeScript({code:scriptCode, args:[]})
+  return response;
+};
+
+export const getContracts = async (account) => {
+  const scriptCode = await readCadence("../../scripts/factory/getContracts.cdc", account);
+  console.log("get pair address script: ", scriptCode)
+  let response = await executeScript({code:scriptCode, args:[account]})
+  return response;
 };
 
 export const deployBasicToken1 = async () => {
@@ -79,6 +93,7 @@ export const createPair = async (account, dexAccount) => {
     "../../transactions/factory/createPair.cdc",
     dex
   );
+  console.log("dex: ", dex, "code: ", code);
   const signers = [account];
   return sendTransaction({ code, signers });
 };

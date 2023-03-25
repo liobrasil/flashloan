@@ -6,8 +6,8 @@ import FlowToken from "FlowToken"
 import SwapFactory from "SwapFactory"
 
 /// Deploy a trading pair for BasicToken1 <-> BasicToken2 if it doesn't exist; otherwise do nothing.
-transaction() {
-    prepare(deployer: AuthAccount) {
+pub fun main():Address? {
+
         let token0Vault <- BasicToken1.createEmptyVault()
         let token1Vault <- BasicToken2.createEmptyVault()
 
@@ -19,17 +19,7 @@ transaction() {
         token1Key = token1Key.slice(from: 0, upTo: token1Key.length - 6)
         /// Check whether pair has already existed or not.
         let pairAddress = SwapFactory.getPairAddress(token0Key: token0Key, token1Key: token1Key)
-        log("pair address: ")
-        log(pairAddress)
-        if (pairAddress == nil) {
-            let flowVaultRef = deployer.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault)!
-            assert(flowVaultRef.balance >= 0.002, message: "Insufficient balance to create pair, minimum balance requirement: 0.002 flow")
-            let fee <- flowVaultRef.withdraw(amount: 0.001)
-            SwapFactory.createPair(token0Vault: <-token0Vault, token1Vault: <-token1Vault, accountCreationFee: <-fee)
-        } else {
-            /// Pair already exists
-            destroy token0Vault
-            destroy token1Vault
-        }
-    }
+        destroy token0Vault;
+        destroy token1Vault;
+        return pairAddress;
 }
